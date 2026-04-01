@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Talk to Ember — CogniSense{% endblock %}
+{% block page_title %}Talk to Ember{% endblock %}
+
+{% block content %}
+
+<div style="max-width:700px;margin:0 auto;">
+
+  <!-- Ember header -->
+  <div class="card-dark" style="margin-bottom:16px;padding:20px 24px;">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="width:54px;height:54px;background:rgba(232,168,56,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;" class="anim-glow">
+        ◎
+      </div>
+      <div style="flex:1;">
+        <div style="color:#fff;font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:600;">Ember</div>
+        <div style="color:rgba(255,255,255,0.45);font-size:0.8rem;">Brings clarity to what's hard to see</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;">
+        <span style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulseGreen 2s infinite;display:inline-block;"></span>
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.5);">Present</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy banner -->
+  <div class="banner banner-info" style="margin-bottom:16px;">
+    <span>🔒</span>
+    <span style="font-size:0.82rem;">Ember doesn't remember this conversation after you leave. Chat messages are never stored or shared.</span>
+  </div>
+
+  <!-- Chat window -->
+  <div class="card-dark" style="padding:20px 24px;">
+
+    <div class="chat-window" id="chat-window">
+
+      <!-- Default opening message if no chat history -->
+      {% if not chat_history %}
+      <div class="chat-bubble-wrap">
+        <div class="chat-avatar">◎</div>
+        <div class="bubble ember">
+          Hi. I'm Ember — I'm here to listen without judgement.<br/>
+          <span style="opacity:0.65;">How are you feeling right now?</span>
+          <div class="sentiment-dot dot-grey"></div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% for msg in chat_history %}
+        {% if msg.role == 'user' %}
+        <div class="chat-bubble-wrap user">
+          <div class="bubble user">
+            {{ msg.text }}
+            {% if msg.dot %}
+            <div class="sentiment-dot dot-{{ msg.dot }}"></div>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <div class="chat-bubble-wrap">
+          <div class="chat-avatar">◎</div>
+          <div class="bubble ember">{{ msg.text }}</div>
+        </div>
+        {% endif %}
+      {% endfor %}
+
+    </div>
+
+    <!-- Input -->
+    <form action="{{ url_for('chat_respond') }}" method="POST">
+      <div class="chat-input-row">
+        <textarea
+          name="message"
+          id="chat-msg"
+          placeholder="Say anything..."
+          rows="1"
+        ></textarea>
+        <button type="submit" class="send-btn" title="Send">→</button>
+      </div>
+    </form>
+
+    <!-- Clear + escalate -->
+    <div style="margin-top:16px;">
+      <details>
+        <summary>Need to talk to a real person?</summary>
+        <div class="grid-3" style="gap:10px;margin-top:12px;">
+          <div class="card" style="padding:14px;text-align:center;">
+            <div style="font-size:20px;margin-bottom:6px;">🏥</div>
+            <div style="font-weight:600;font-size:0.85rem;margin-bottom:4px;">Rehab Center</div>
+            <p style="font-size:0.75rem;margin-bottom:8px;">Connect with a licensed rehabilitation professional.</p>
+            <a href="{{ url_for('rehab_center') }}" class="btn btn-primary btn-sm">View Dashboard</a>
+          </div>
+          <div class="card" style="padding:14px;text-align:center;">
+            <div style="font-size:20px;margin-bottom:6px;">📞</div>
+            <div style="font-weight:600;font-size:0.85rem;margin-bottom:4px;">Crisis Helpline</div>
+            <p style="font-size:0.75rem;margin-bottom:8px;">iCall: 9152987821 · Vandrevala: 1860-2662-345</p>
+            <a href="tel:9152987821" class="btn btn-ghost btn-sm">Call iCall</a>
+          </div>
+          <div class="card" style="padding:14px;text-align:center;">
+            <div style="font-size:20px;margin-bottom:6px;">◷</div>
+            <div style="font-weight:600;font-size:0.85rem;margin-bottom:4px;">Grounding Exercise</div>
+            <p style="font-size:0.75rem;margin-bottom:8px;">Box breathing and sensory reset exercises.</p>
+            <a href="{{ url_for('toolkit') }}" class="btn btn-ghost btn-sm">Open Toolkit</a>
+          </div>
+        </div>
+      </details>
+
+      <div style="margin-top:12px;text-align:center;">
+        <form action="{{ url_for('chat_clear') }}" method="POST" style="display:inline;">
+          <button type="button" onclick="if(confirm('Clear this conversation?'))this.form.submit();"
+                  style="background:none;border:none;color:var(--text-muted);font-size:0.8rem;cursor:pointer;text-decoration:underline;">
+            Clear Conversation
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Auto-scroll chat to bottom
+  const cw = document.getElementById('chat-window');
+  if (cw) cw.scrollTop = cw.scrollHeight;
+
+  // Auto-resize textarea
+  const msg = document.getElementById('chat-msg');
+  if (msg) {
+    msg.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    });
+    // Submit on Enter (not Shift+Enter)
+    msg.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.closest('form').submit();
+      }
+    });
+  }
+</script>
+{% endblock %}

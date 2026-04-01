@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}7-Day Trend — CogniSense{% endblock %}
+{% block page_title %}7-Day Trend{% endblock %}
+
+{% block content %}
+
+{% if show_pattern_warning %}
+<div class="banner banner-warning" style="margin-bottom:20px;">
+  <span>⚠</span>
+  <div>
+    Rising pattern detected across recent sessions. Consider speaking with a professional.
+    <a href="{{ url_for('rehab_center') }}" style="color:var(--amber-dark);font-weight:600;"> View Rehab Center →</a>
+  </div>
+</div>
+{% endif %}
+
+<!-- Stat cards -->
+<div class="stats-grid" style="margin-bottom:28px;">
+  <div class="stat-card">
+    <div class="stat-label">Avg BRI (7 days)</div>
+    <div class="stat-value">{{ avg_bri }}</div>
+    <div class="stat-sub">Average score</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Highest Day</div>
+    <div class="stat-value" style="color:var(--red);">{{ highest }}</div>
+    <div class="stat-sub">Peak BRI</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Lowest Day</div>
+    <div class="stat-value" style="color:var(--green);">{{ lowest }}</div>
+    <div class="stat-sub">Best BRI</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Check-ins</div>
+    <div class="stat-value">{{ total }}</div>
+    <div class="stat-sub">
+      Trend:
+      {% if trend_direction == 'Rising' %}
+        <span style="color:var(--red);">↑ Rising</span>
+      {% elif trend_direction == 'Improving' %}
+        <span style="color:var(--green);">↓ Improving</span>
+      {% else %}
+        <span style="color:var(--text-muted);">→ Stable</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Heatmap -->
+<div class="card" style="margin-bottom:28px;">
+  <div class="flex-between mb-16">
+    <h2 style="font-size:1.1rem;">7-Day Heatmap</h2>
+    <a href="{{ url_for('checkin') }}" class="btn btn-primary btn-sm">+ Today's Check-in</a>
+  </div>
+
+  <div class="heatmap-grid">
+    {% for cell in heatmap %}
+    <div class="heatmap-cell
+      {% if not cell.has_data %}no-data
+      {% elif cell.risk_level == 'Low' %}cell-low
+      {% elif cell.risk_level == 'Medium' %}cell-medium
+      {% elif cell.risk_level == 'High' %}cell-high
+      {% endif %}">
+      <div class="heatmap-day">{{ cell.day_name }}</div>
+      <div class="heatmap-date">{{ cell.short_date }}</div>
+      {% if cell.has_data %}
+        <div class="heatmap-score">{{ cell.bri_score }}</div>
+        <div class="heatmap-emoji">
+          {% if cell.risk_level == 'Low' %}🟢
+          {% elif cell.risk_level == 'Medium' %}🟡
+          {% else %}🔴{% endif %}
+        </div>
+        <div class="heatmap-tone">{{ cell.tone_label }}</div>
+      {% else %}
+        <div style="font-size:1.2rem;color:#ccc;">—</div>
+        <div class="heatmap-tone">No data</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Legend -->
+  <div class="heatmap-legend" style="margin-top:12px;">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#D6F0E3;border:1px solid rgba(76,175,125,0.4);"></div>
+      Low (0–40)
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#FDF0CE;border:1px solid rgba(232,168,56,0.4);"></div>
+      Medium (41–74)
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#FADAD5;border:1px solid rgba(217,95,75,0.4);"></div>
+      High (75–100)
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#eee;border:1px solid #ddd;"></div>
+      No data
+    </div>
+  </div>
+</div>
+
+<!-- All sessions list -->
+<div class="card">
+  <div class="flex-between mb-16">
+    <h2 style="font-size:1.1rem;">All Sessions (Last 7 Days)</h2>
+    <span class="section-label">{{ total }} total</span>
+  </div>
+
+  {% if all_sessions %}
+    {% for s in all_sessions %}
+    <div class="session-row {{ 'risk-low' if s.risk_level=='Low' else 'risk-medium' if s.risk_level=='Medium' else 'risk-high' }}">
+      <span class="session-time">{{ s.timestamp[:16] }}</span>
+      <span class="session-score">{{ s.bri_score }}</span>
+      <span class="risk-badge {{ 'risk-low' if s.risk_level=='Low' else 'risk-medium' if s.risk_level=='Medium' else 'risk-high' }}">
+        {{ s.risk_level }}
+      </span>
+      <span class="session-tone">{{ s.tone_label }}</span>
+      <span style="font-size:0.72rem;color:var(--text-muted);font-family:'DM Mono',monospace;margin-left:auto;">
+        neg={{ s.neg_score }} · kw={{ s.keyword_hits }}
+      </span>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      No sessions in the past 7 days.<br/>
+      <a href="{{ url_for('checkin') }}" style="color:var(--teal);">Start your first check-in →</a>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

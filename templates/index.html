@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — CogniSense{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ────────────────────────────────────────────────── -->
+<div class="card-dark" style="position:relative; overflow:hidden; margin-bottom:28px; padding:48px 40px;">
+  <!-- Animated orbs -->
+  <div class="orb orb-teal"  style="width:320px;height:320px;top:-60px;left:-80px;"></div>
+  <div class="orb orb-amber" style="width:240px;height:240px;bottom:-40px;right:-60px;animation-delay:-2s;"></div>
+
+  <div style="position:relative;z-index:1;">
+    <!-- Badge -->
+    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(42,125,111,0.25);border:1px solid rgba(42,125,111,0.4);border-radius:20px;padding:5px 13px;margin-bottom:20px;">
+      <span style="width:7px;height:7px;border-radius:50%;background:var(--teal-light);animation:pulseGreen 2s infinite;display:inline-block;"></span>
+      <span style="font-size:0.75rem;font-family:'DM Mono',monospace;color:rgba(255,255,255,0.75);letter-spacing:0.06em;">AI-Powered Early Detection</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;">
+      <div>
+        <h1 style="color:#fff;font-size:2.8rem;line-height:1.1;margin-bottom:14px;">
+          Detect burnout<br/>
+          <em style="color:var(--teal-light);font-style:italic;">before it becomes</em><br/>
+          a crisis.
+        </h1>
+        <p style="color:rgba(255,255,255,0.55);font-size:0.95rem;margin-bottom:24px;max-width:440px;">
+          Anonymous. Local. Proactive. In 10 seconds a day.
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a href="{{ url_for('checkin') }}" class="btn btn-primary">✦ Start Daily Check-in</a>
+          <a href="#bri-explainer" class="btn btn-ghost-white">◎ See How BRI Works</a>
+        </div>
+      </div>
+
+      <!-- Animated heartbeat SVG -->
+      <div style="opacity:0.7;">
+        <svg width="180" height="80" viewBox="0 0 180 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polyline
+            points="0,40 30,40 40,15 50,65 60,28 70,52 80,40 110,40 120,5 130,75 140,40 180,40"
+            stroke="#3D9E8F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            fill="none"
+            stroke-dasharray="500"
+            stroke-dashoffset="500"
+            style="animation: heartbeat 2.5s ease forwards 0.5s;"
+          />
+        </svg>
+        <style>
+          @keyframes heartbeat {
+            to { stroke-dashoffset: 0; }
+          }
+        </style>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Pattern warning ──────────────────────────────────────── -->
+{% if show_pattern_warning %}
+<div class="banner banner-warning" style="margin-bottom:20px;">
+  <span style="font-size:18px;">⚠</span>
+  <div>
+    <strong>Rising pattern detected.</strong>
+    Your BRI scores have been increasing for 3+ consecutive sessions. Consider speaking with a professional.
+    <a href="{{ url_for('rehab_center') }}" style="color:var(--amber-dark);font-weight:600;"> View Rehab Center →</a>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Summary stat cards ───────────────────────────────────── -->
+<div class="stats-grid" style="margin-bottom:28px;">
+  <!-- Today's BRI -->
+  <div class="stat-card">
+    <div class="stat-label">Today's BRI</div>
+    {% if today_bri is not none %}
+      <div class="stat-value">{{ today_bri }}</div>
+      {% if today_bri <= 40 %}
+        <div style="margin-top:6px;"><span class="risk-badge risk-low">Low Risk</span></div>
+      {% elif today_bri <= 74 %}
+        <div style="margin-top:6px;"><span class="risk-badge risk-medium">Medium Risk</span></div>
+      {% else %}
+        <div style="margin-top:6px;"><span class="risk-badge risk-high">High Risk</span></div>
+      {% endif %}
+    {% else %}
+      <div class="stat-value" style="color:var(--text-muted);font-size:1.2rem;font-family:'DM Sans',sans-serif;">No data</div>
+      <div class="stat-sub">Complete a check-in</div>
+    {% endif %}
+  </div>
+
+  <!-- Streak -->
+  <div class="stat-card">
+    <div class="stat-label">Check-in Streak</div>
+    <div class="stat-value" style="color:var(--amber);">
+      {% if streak > 0 %}{{ streak }}{% else %}0{% endif %}
+    </div>
+    <div class="stat-sub">
+      {% if streak == 1 %}day 🔥{% elif streak > 1 %}days 🔥{% else %}Start today!{% endif %}
+    </div>
+  </div>
+
+  <!-- 7-Day Trend -->
+  <div class="stat-card">
+    <div class="stat-label">7-Day Trend</div>
+    {% if trend_direction == 'Rising' %}
+      <div class="stat-value" style="color:var(--red);">↑</div>
+      <div class="stat-sub" style="color:var(--red);">Rising</div>
+    {% elif trend_direction == 'Improving' %}
+      <div class="stat-value" style="color:var(--green);">↓</div>
+      <div class="stat-sub" style="color:var(--green);">Improving</div>
+    {% else %}
+      <div class="stat-value" style="color:var(--text-muted);">→</div>
+      <div class="stat-sub">Stable</div>
+    {% endif %}
+  </div>
+
+  <!-- Current State -->
+  <div class="stat-card">
+    <div class="stat-label">Current State</div>
+    <div class="stat-value" style="font-size:1.4rem;font-family:'DM Sans',sans-serif;font-weight:600;margin-top:6px;">
+      {% if current_state == 'Stable' %}
+        <span style="color:var(--green);">Stable</span>
+      {% elif current_state == 'Elevated' %}
+        <span style="color:var(--amber);">Elevated</span>
+      {% elif current_state == 'At Risk' %}
+        <span style="color:var(--red);">At Risk</span>
+      {% else %}
+        <span style="color:var(--text-muted);">—</span>
+      {% endif %}
+    </div>
+    <div class="stat-sub" style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+      <span style="width:7px;height:7px;border-radius:50%;display:inline-block;
+        background:{% if current_state == 'Stable' %}var(--green){% elif current_state == 'Elevated' %}var(--amber){% elif current_state == 'At Risk' %}var(--red){% else %}#ccc{% endif %};
+        animation:pulseGreen 2s infinite;"></span>
+      Live status
+    </div>
+  </div>
+</div>
+
+<!-- ── Rehab collaboration banner ────────────────────────────── -->
+<div class="card-dark" style="margin-bottom:28px;padding:28px 32px;">
+  <div style="display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;">
+    <div style="width:48px;height:48px;background:rgba(42,125,111,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;" class="anim-glow">
+      🏥
+    </div>
+    <div>
+      <h3 style="color:#fff;margin-bottom:4px;">Connected to Professional Care</h3>
+      <p style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-bottom:10px;">
+        Your anonymous BRI scores can be monitored by licensed rehabilitation professionals to provide proactive support.
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span style="background:rgba(76,175,125,0.15);border:1px solid rgba(76,175,125,0.3);color:rgba(255,255,255,0.7);font-size:0.72rem;padding:3px 9px;border-radius:20px;">✓ Anonymous only</span>
+        <span style="background:rgba(76,175,125,0.15);border:1px solid rgba(76,175,125,0.3);color:rgba(255,255,255,0.7);font-size:0.72rem;padding:3px 9px;border-radius:20px;">✓ You control consent</span>
+        <span style="background:rgba(76,175,125,0.15);border:1px solid rgba(76,175,125,0.3);color:rgba(255,255,255,0.7);font-size:0.72rem;padding:3px 9px;border-radius:20px;">✓ Delete anytime</span>
+        <span style="background:rgba(42,125,111,0.2);border:1px solid rgba(42,125,111,0.4);color:var(--teal-light);font-size:0.72rem;padding:3px 9px;border-radius:20px;">◈ {{ linked_centers|length }} centers linked</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <a href="{{ url_for('privacy') }}" class="btn btn-ghost-white btn-sm">Manage Consent</a>
+      <a href="{{ url_for('rehab_center') }}" class="btn btn-primary btn-sm">Center Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── Trust Promise ──────────────────────────────────────────── -->
+<div style="margin-bottom:28px;">
+  <div class="section-label" style="margin-bottom:14px;">Our Promise</div>
+  <div class="grid-3" style="gap:12px;">
+
+    {% set pillars = [
+      ('🔒','Zero Identity Storage','Your name and device are never stored. Even we cannot trace a session back to you.'),
+      ('✋','Consent Before Everything','Nothing is shared with anyone until you explicitly toggle sharing ON.'),
+      ('🗑','Delete Anytime','Every session is deletable in one click with no delays or confirmation emails.'),
+      ('👁','See Exactly What\'s Shared','A live sharing log on the Privacy page shows every data point sent, nothing hidden.'),
+      ('◎','Transparent Formula','BRI formula is visible on every page — no black-box AI making silent judgements.'),
+      ('🏥','Verified Professionals Only','Only licensed rehabilitation centers are approved to view aggregate anonymous data.'),
+    ] %}
+
+    {% for icon, title, desc in pillars %}
+    <div class="card" style="padding:18px 20px;">
+      <div style="font-size:22px;margin-bottom:8px;">{{ icon }}</div>
+      <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px;">{{ title }}</div>
+      <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.5;">{{ desc }}</p>
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+
+<!-- ── BRI Explainer ──────────────────────────────────────────── -->
+<div id="bri-explainer" class="card-dark" style="margin-bottom:28px;padding:32px 36px;">
+  <div class="section-label" style="color:rgba(255,255,255,0.35);margin-bottom:16px;">How It Works</div>
+  <h2 style="color:#fff;margin-bottom:20px;">The BRI Formula</h2>
+
+  <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px 24px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.08);">
+    <div style="font-family:'DM Mono',monospace;font-size:1.1rem;color:rgba(255,255,255,0.9);">
+      BRI = (<span style="color:var(--teal-light);">Negative Sentiment</span> × <span style="color:var(--amber);">70</span>)
+          + (<span style="color:var(--teal-light);">Keyword Hits</span> × <span style="color:var(--amber);">30</span>)
+    </div>
+    <div style="font-size:0.75rem;color:rgba(255,255,255,0.35);margin-top:8px;font-family:'DM Mono',monospace;">
+      Scored 0–100 · VADER NLP · 15 burnout keywords · No personal data stored
+    </div>
+  </div>
+
+  <div class="grid-3" style="gap:12px;">
+    <div style="background:rgba(76,175,125,0.1);border:1px solid rgba(76,175,125,0.25);border-radius:10px;padding:16px;text-align:center;">
+      <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--green);letter-spacing:0.1em;margin-bottom:6px;">🟢 LOW RISK</div>
+      <div style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:#fff;">0–40</div>
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:4px;">Calm · Stable</div>
+    </div>
+    <div style="background:rgba(232,168,56,0.1);border:1px solid rgba(232,168,56,0.25);border-radius:10px;padding:16px;text-align:center;">
+      <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--amber);letter-spacing:0.1em;margin-bottom:6px;">🟡 MEDIUM RISK</div>
+      <div style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:#fff;">41–74</div>
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:4px;">Tense · Watch</div>
+    </div>
+    <div style="background:rgba(217,95,75,0.1);border:1px solid rgba(217,95,75,0.25);border-radius:10px;padding:16px;text-align:center;">
+      <div style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--red);letter-spacing:0.1em;margin-bottom:6px;">🔴 HIGH RISK</div>
+      <div style="font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:#fff;">75–100</div>
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:4px;">Burned Out · Act</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Features grid ──────────────────────────────────────────── -->
+<div>
+  <div class="section-label" style="margin-bottom:14px;">What's Inside</div>
+  <div class="grid-3" style="gap:12px;">
+    {% set features = [
+      ('◷','Daily Check-in','10-second voice or text assessment — completely anonymous'),
+      ('◎','BRI Score','VADER NLP + keyword matching gives an instant burnout index'),
+      ('▦','7-Day Trend','Heatmap showing your emotional pattern across the week'),
+      ('◌','Talk to Ember','Keyword-aware AI companion for emotional support'),
+      ('◈','Rehab Center Link','Optional anonymous sharing with licensed professionals'),
+      ('🔒','Full Data Control','Privacy dashboard — see, delete, and control everything'),
+    ] %}
+    {% for icon, title, desc in features %}
+    <div class="card" style="padding:16px 18px;display:flex;gap:12px;align-items:flex-start;">
+      <div style="font-size:20px;color:var(--teal);min-width:24px;">{{ icon }}</div>
+      <div>
+        <div style="font-weight:600;font-size:0.88rem;margin-bottom:3px;">{{ title }}</div>
+        <p style="font-size:0.78rem;color:var(--text-muted);">{{ desc }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

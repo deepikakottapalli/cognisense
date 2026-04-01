@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}CogniSense{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body>
+
+<!-- CSS-only sidebar toggle — zero JS -->
+<input type="checkbox" id="sidebar-toggle" />
+
+<div class="app-shell">
+
+  <!-- ── Sidebar ─────────────────────────────────────────── -->
+  <aside class="sidebar">
+
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">◎</div>
+        <div>
+          <div class="logo-text">CogniSense</div>
+          <div class="logo-sub">Burnout Early Detection</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Streak pill -->
+    {% if streak > 0 %}
+    <div class="streak-pill">
+      <span class="flame">🔥</span>
+      <span><strong>{{ streak }}-day</strong> check-in streak</span>
+    </div>
+    {% endif %}
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+
+      <a href="{{ url_for('index') }}"
+         class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+        <span class="nav-icon">◈</span> Dashboard
+      </a>
+
+      <a href="{{ url_for('checkin') }}"
+         class="nav-link {% if request.endpoint in ['checkin','analyze','results'] %}active{% endif %}">
+        <span class="nav-icon">✦</span> Daily Check-in
+      </a>
+
+      <a href="{{ url_for('history') }}"
+         class="nav-link {% if request.endpoint == 'history' %}active{% endif %}">
+        <span class="nav-icon">▦</span> 7-Day Trend
+      </a>
+
+      <a href="{{ url_for('chat') }}"
+         class="nav-link {% if request.endpoint == 'chat' %}active{% endif %}">
+        <span class="nav-icon">◌</span> Talk to Ember
+      </a>
+
+      <a href="{{ url_for('toolkit') }}"
+         class="nav-link {% if request.endpoint == 'toolkit' %}active{% endif %}">
+        <span class="nav-icon">◷</span> Grounding Kit
+      </a>
+
+      <hr class="nav-divider" />
+      <div class="nav-section-label">Professional Care</div>
+
+      <a href="{{ url_for('rehab_center') }}"
+         class="nav-link {% if request.endpoint == 'rehab_center' %}active{% endif %}">
+        <span class="nav-icon">🏥</span> Rehab Center View
+      </a>
+
+      <a href="{{ url_for('privacy') }}"
+         class="nav-link privacy-link {% if request.endpoint == 'privacy' %}active{% endif %}">
+        <span class="nav-icon">🔒</span> My Data &amp; Privacy
+      </a>
+
+    </nav>
+  </aside>
+
+  <!-- ── Main content ────────────────────────────────────── -->
+  <div class="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <label for="sidebar-toggle" class="menu-btn" title="Toggle menu">☰</label>
+        <span class="page-title">{% block page_title %}CogniSense{% endblock %}</span>
+      </div>
+      <div class="topbar-right">
+        <div class="data-protected-pill">
+          <span style="font-size:10px">●</span> Data Protected
+        </div>
+        {% if today_bri is not none %}
+        <div class="bri-pill">BRI {{ today_bri }}</div>
+        {% endif %}
+        <a href="{{ url_for('checkin') }}" class="btn-checkin">+ Check-in</a>
+      </div>
+    </header>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash {{ category }}">
+          {% if category == 'success' %}✓{% elif category == 'warning' %}⚠{% else %}✕{% endif %}
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Page content -->
+    <main class="page-body">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div><!-- /main-content -->
+</div><!-- /app-shell -->
+
+<script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

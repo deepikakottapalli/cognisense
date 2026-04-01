@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% block title %}My Data & Privacy — CogniSense{% endblock %}
+{% block page_title %}My Data & Privacy{% endblock %}
+
+{% block content %}
+
+<!-- Privacy hero -->
+<div style="text-align:center;margin-bottom:32px;">
+  <div style="font-size:3.5rem;margin-bottom:12px;">🔒</div>
+  <h1 style="margin-bottom:8px;">Your Data. Your Rules.</h1>
+  <p style="max-width:540px;margin:0 auto;color:var(--text-mid);">
+    CogniSense is built on radical transparency. Every piece of data we have about you is listed below.
+    You can see it, delete it, and control who sees it — at any time.
+  </p>
+</div>
+
+<!-- Privacy score -->
+<div class="card-dark" style="margin-bottom:24px;padding:28px 32px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
+    <div>
+      <div class="section-label" style="color:rgba(255,255,255,0.35);margin-bottom:6px;">Privacy Score</div>
+      <div style="display:flex;align-items:baseline;gap:6px;">
+        <span style="font-family:'Playfair Display',serif;font-size:3rem;font-weight:700;color:{% if privacy_score >= 80 %}var(--teal-light){% elif privacy_score >= 60 %}var(--amber){% else %}var(--red){% endif %};">
+          {{ privacy_score }}
+        </span>
+        <span style="color:rgba(255,255,255,0.35);font-size:1.2rem;">/100</span>
+      </div>
+      <div style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-top:4px;">
+        {% if sharing_enabled %}Sharing enabled reduces privacy score slightly{% else %}Maximum privacy — sharing is off{% endif %}
+      </div>
+    </div>
+    <div style="flex:1;min-width:200px;">
+      <div style="display:flex;justify-content:space-between;font-size:0.72rem;font-family:'DM Mono',monospace;color:rgba(255,255,255,0.3);margin-bottom:6px;">
+        <span>Less Private</span><span>More Private</span>
+      </div>
+      <div class="privacy-score-meter">
+        <div class="privacy-score-thumb" style="left:{{ privacy_meter }}%;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sharing & Consent -->
+<div class="card" style="margin-bottom:24px;">
+  <h2 style="margin-bottom:16px;">◈ Sharing &amp; Consent</h2>
+
+  <div style="border:1.5px solid var(--border);border-radius:12px;padding:20px 22px;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;">
+        <div style="font-weight:600;margin-bottom:4px;">Share BRI Data with Rehabilitation Professionals</div>
+        <p style="font-size:0.85rem;margin-bottom:0;">
+          When ON, your anonymous BRI score, risk level, and timestamp will be shared with linked rehabilitation centers.
+          Your identity and check-in text are <strong>never</strong> included.
+        </p>
+      </div>
+      <form action="{{ url_for('toggle_sharing') }}" method="POST" style="display:flex;align-items:center;">
+        <div class="toggle-wrap">
+          <button type="submit" class="toggle-btn {% if sharing_enabled %}on{% else %}off{% endif %}" title="Toggle sharing"></button>
+          <span style="font-size:0.85rem;font-weight:500;color:{% if sharing_enabled %}var(--teal){% else %}var(--text-muted){% endif %};">
+            {% if sharing_enabled %}ON{% else %}OFF{% endif %}
+          </span>
+        </div>
+      </form>
+    </div>
+
+    {% if sharing_enabled %}
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <div class="grid-2" style="gap:12px;">
+        <div>
+          <div style="font-size:0.72rem;font-family:'DM Mono',monospace;color:var(--green);margin-bottom:8px;letter-spacing:0.08em;">✓ WHAT'S SHARED</div>
+          {% for item in ['BRI score','Risk level','Tone label','Session timestamp'] %}
+          <div style="font-size:0.82rem;color:var(--text-mid);margin-bottom:4px;display:flex;gap:6px;">
+            <span style="color:var(--green);">✓</span> {{ item }}
+          </div>
+          {% endfor %}
+        </div>
+        <div>
+          <div style="font-size:0.72rem;font-family:'DM Mono',monospace;color:var(--text-muted);margin-bottom:8px;letter-spacing:0.08em;">✕ NEVER SHARED</div>
+          {% for item in ['Check-in text','Name or identity','Chat messages','Device/location'] %}
+          <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:4px;display:flex;gap:6px;">
+            <span>✕</span> {{ item }}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- What CogniSense stores -->
+<div class="card" style="margin-bottom:24px;">
+  <h2 style="margin-bottom:4px;">📋 What CogniSense Stores</h2>
+  <p style="font-size:0.85rem;margin-bottom:16px;">A complete inventory of every data type this application handles.</p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Data Type</th>
+        <th>Status</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item, status, note in [
+        ('BRI Score',          'stored',  'Numerical score 0–100, stored per session'),
+        ('Risk Level',         'stored',  'Low / Medium / High classification'),
+        ('Session Timestamp',  'stored',  'Date and time of check-in only'),
+        ('Tone Label',         'stored',  'Calm / Neutral / Tense / Burned Out'),
+        ('Neg. Sentiment Score','stored', 'VADER float score used in BRI calculation'),
+        ('Keyword Hits',       'stored',  'Count of burnout keywords detected'),
+        ('Check-in Text',      'never',   'Analyzed and immediately discarded — NEVER stored'),
+        ('Ember Chat Messages','never',   'Flask session only — clears when you close the tab'),
+        ('Name / Email / ID',  'never',   'No identity of any kind is ever collected'),
+        ('Device / Location',  'never',   'No fingerprinting, no IP logging, nothing'),
+      ] %}
+      <tr style="background:{% if status == 'never' %}#fafafa{% else %}#fff{% endif %};">
+        <td style="font-weight:500;">{{ item }}</td>
+        <td>
+          {% if status == 'stored' %}
+            <span class="data-tag tag-stored">● Stored</span>
+          {% else %}
+            <span class="data-tag tag-never">✕ Never Stored</span>
+          {% endif %}
+        </td>
+        <td style="font-size:0.8rem;color:var(--text-muted);">{{ note }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Sharing log -->
+<div class="card" style="margin-bottom:24px;">
+  <h2 style="margin-bottom:4px;">👁 Sharing Log</h2>
+  <p style="font-size:0.85rem;margin-bottom:16px;">Every time your data was shared with a rehabilitation center — nothing hidden.</p>
+
+  {% if sharing_log %}
+  <div style="overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date &amp; Time</th>
+          <th>BRI Shared</th>
+          <th>Risk Level</th>
+          <th>Shared With</th>
+          <th>Data Points</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in sharing_log %}
+        <tr>
+          <td class="font-mono" style="font-size:0.8rem;">{{ entry.timestamp[:16] }}</td>
+          <td class="font-mono" style="font-weight:600;">{{ entry.bri_score }}</td>
+          <td>
+            <span class="risk-badge {{ 'risk-low' if entry.risk_level=='Low' else 'risk-medium' if entry.risk_level=='Medium' else 'risk-high' }}">
+              {{ entry.risk_level }}
+            </span>
+          </td>
+          <td style="font-size:0.82rem;">{{ entry.center_name }}</td>
+          <td style="font-size:0.75rem;color:var(--text-muted);">BRI · Risk · Timestamp</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:20px;">
+    No data has been shared with any professional yet.
+  </div>
+  {% endif %}
+</div>
+
+<!-- My sessions -->
+<div class="card" style="margin-bottom:24px;">
+  <div class="flex-between mb-16">
+    <div>
+      <h2 style="margin-bottom:2px;">🗃 My Stored Sessions</h2>
+      <p style="font-size:0.82rem;color:var(--text-muted);">{{ session_count }} session{{ 's' if session_count != 1 }} stored</p>
+    </div>
+  </div>
+
+  {% if all_sessions %}
+  <div style="overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date &amp; Time</th>
+          <th>BRI Score</th>
+          <th>Risk Level</th>
+          <th>Tone</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in all_sessions %}
+        <tr>
+          <td class="font-mono" style="font-size:0.8rem;">{{ s.timestamp[:16] }}</td>
+          <td class="font-mono" style="font-weight:600;">{{ s.bri_score }}</td>
+          <td>
+            <span class="risk-badge {{ 'risk-low' if s.risk_level=='Low' else 'risk-medium' if s.risk_level=='Medium' else 'risk-high' }}">
+              {{ s.risk_level }}
+            </span>
+          </td>
+          <td style="font-size:0.82rem;color:var(--text-mid);">{{ s.tone_label }}</td>
+          <td>
+            <form action="{{ url_for('delete_session', session_id=s.id) }}" method="POST" style="display:inline;">
+              <button type="button"
+                      onclick="if(confirm('Delete this session?'))this.form.submit();"
+                      class="btn btn-danger btn-sm" style="padding:4px 10px;font-size:0.75rem;">
+                🗑
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No sessions stored yet.</div>
+  {% endif %}
+</div>
+
+<!-- Delete all -->
+<div style="border:1.5px solid rgba(217,95,75,0.25);border-radius:var(--radius-lg);padding:24px 28px;background:var(--red-faint);">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+    <div>
+      <h2 style="color:var(--red);margin-bottom:6px;">🗑 Delete All My Data</h2>
+      <p style="font-size:0.88rem;color:#7a2d1f;margin-bottom:0;">
+        This will permanently delete <strong>{{ session_count }} session{{ 's' if session_count != 1 }}</strong>
+        and <strong>{{ sharing_count }} sharing log entr{{ 'y' if sharing_count == 1 else 'ies' }}</strong>.
+        This action cannot be undone.
+      </p>
+    </div>
+    <form action="{{ url_for('delete_all') }}" method="POST">
+      <button type="button"
+              onclick="if(confirm('⚠ Delete ALL {{ session_count }} sessions and {{ sharing_count }} sharing log entries? This cannot be undone.'))this.form.submit();"
+              class="btn btn-danger">
+        🗑 Delete All My Data
+      </button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

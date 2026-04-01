@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Daily Check-in — CogniSense{% endblock %}
+{% block page_title %}Daily Check-in{% endblock %}
+
+{% block content %}
+
+<div style="max-width:680px;margin:0 auto;">
+
+  <div class="section-label" style="margin-bottom:8px;">10 seconds is all it takes</div>
+  <h1 style="margin-bottom:6px;">How are you feeling today?</h1>
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:28px;">
+    <span style="font-size:14px;">🔒</span>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin:0;">
+      What you share is analyzed locally — nothing leaves this server. Your identity is never stored.
+    </p>
+  </div>
+
+  <!-- Consent reminder -->
+  {% if sharing_enabled %}
+  <div class="banner banner-info" style="margin-bottom:20px;">
+    <span>◈</span>
+    <span>Your BRI result will be shared <strong>anonymously</strong> with linked rehabilitation professionals.
+      <a href="{{ url_for('privacy') }}" style="color:var(--teal);font-weight:600;">Change this →</a>
+    </span>
+  </div>
+  {% else %}
+  <div class="banner" style="background:#f9f9f9;border:1px solid var(--border);color:var(--text-mid);margin-bottom:20px;">
+    <span>🔒</span>
+    <span>Results are private. You can enable sharing with rehab professionals anytime.
+      <a href="{{ url_for('privacy') }}" style="color:var(--teal);font-weight:600;">Enable sharing →</a>
+    </span>
+  </div>
+  {% endif %}
+
+  <!-- Main form -->
+  <div class="card" style="margin-bottom:24px;">
+    <form action="{{ url_for('analyze') }}" method="POST">
+
+      <div style="position:relative;">
+        <textarea
+          id="checkin-input"
+          name="checkin_text"
+          rows="6"
+          placeholder="Type how you're really feeling... or tap the mic and speak it."
+          style="width:100%;resize:vertical;font-size:1rem;padding:16px 18px;border-radius:14px;"
+        ></textarea>
+
+        <!-- Textarea footer bar -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+          <span style="font-size:0.78rem;color:var(--text-muted);font-style:italic;">
+            Be honest. There's no wrong answer.
+          </span>
+          <button type="button" class="mic-btn" id="mic-btn">
+            🎙 Speak
+          </button>
+        </div>
+
+        <!-- Voice status indicator -->
+        <div class="voice-status" id="voice-status">
+          <div class="rec-dot"></div>
+          <span class="voice-err-text">Listening...</span>
+        </div>
+      </div>
+
+      <!-- Keyword chips -->
+      <div style="margin-top:16px;">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:6px;font-family:'DM Mono',monospace;letter-spacing:0.06em;">QUICK ADD</div>
+        <div class="chips-row">
+          {% for word in ['tired','overwhelmed','can\'t focus','anxious','burned out','drained','hopeless','stressed','exhausted','empty'] %}
+          <span class="keyword-chip" data-word="{{ word }}">{{ word }}</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div style="margin-top:20px;">
+        <button type="submit" class="btn btn-primary btn-full">
+          ◎ Analyze My BRI
+        </button>
+        <div style="text-align:center;margin-top:10px;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text-muted);">
+          BRI = (Negative Sentiment × 70) + (Keyword Hits × 30)
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Recent sessions -->
+  {% if recent %}
+  <div>
+    <div class="flex-between mb-12">
+      <div class="section-label">Recent Sessions</div>
+      <a href="{{ url_for('history') }}" style="font-size:0.8rem;color:var(--teal);">View all →</a>
+    </div>
+
+    {% for s in recent %}
+    <div class="session-row {{ 'risk-low' if s.risk_level=='Low' else 'risk-medium' if s.risk_level=='Medium' else 'risk-high' }}">
+      <span class="session-time">{{ s.timestamp[:16] }}</span>
+      <span class="session-score">{{ s.bri_score }}</span>
+      <span class="risk-badge {{ 'risk-low' if s.risk_level=='Low' else 'risk-medium' if s.risk_level=='Medium' else 'risk-high' }}">
+        {{ s.risk_level }}
+      </span>
+      <span class="session-tone">{{ s.tone_label }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

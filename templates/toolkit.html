@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Grounding Kit — CogniSense{% endblock %}
+{% block page_title %}Grounding Kit{% endblock %}
+
+{% block content %}
+
+<!-- Streak card -->
+<div class="card-dark" style="margin-bottom:28px;padding:24px 28px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div style="font-size:3rem;line-height:1;">🔥</div>
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:700;color:var(--amber);line-height:1;">{{ streak }}</div>
+        <div style="color:rgba(255,255,255,0.5);font-size:0.85rem;">
+          day{% if streak != 1 %}s{% endif %} streak
+          {% if streak == 0 %} — start today!{% elif streak < 3 %} — keep going!{% elif streak < 7 %} — building momentum!{% else %} — incredible consistency!{% endif %}
+        </div>
+      </div>
+    </div>
+    <!-- Milestone badges -->
+    <div style="display:flex;gap:10px;">
+      {% for days, label, icon in [(3,'Day 3','🥉'),(7,'Day 7','🥈'),(30,'Day 30','🥇')] %}
+      <div style="text-align:center;opacity:{% if streak >= days %}1{% else %}0.3{% endif %};">
+        <div style="font-size:1.6rem;">{{ icon }}</div>
+        <div style="font-size:0.65rem;font-family:'DM Mono',monospace;color:rgba(255,255,255,0.5);margin-top:2px;">{{ label }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ── Exercise 01 — Box Breathing ─────────────────────────── -->
+<div class="card" style="margin-bottom:24px;" id="box-breathing">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+    <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text-muted);">EXERCISE 01</span>
+  </div>
+  <h2 style="margin-bottom:4px;">Box Breathing</h2>
+  <p style="margin-bottom:20px;">A simple 4-4-4-4 breathing pattern that activates the parasympathetic nervous system to reduce stress instantly.</p>
+
+  <!-- CSS-only animation — zero JS -->
+  <input type="checkbox" id="breath-toggle" />
+
+  <div style="display:flex;align-items:center;gap:28px;flex-wrap:wrap;">
+    <div class="breath-control">
+      <!-- toggle label must come AFTER the input for CSS sibling selector -->
+      <label for="breath-toggle" class="breath-toggle-label">
+        <span class="breath-start-label">▶ Start</span>
+        <span class="breath-stop-label" style="display:none;">■ Stop</span>
+      </label>
+
+      <div class="breath-phase-row" style="margin-top:14px;">
+        <span class="phase-chip">4s Inhale</span>
+        <span class="phase-chip">4s Hold</span>
+        <span class="phase-chip">4s Exhale</span>
+        <span class="phase-chip">4s Hold</span>
+      </div>
+    </div>
+
+    <div class="breath-visual">
+      <svg width="200" height="200" viewBox="0 0 200 200">
+        <!-- background square -->
+        <rect class="breath-sq" x="20" y="20" width="160" height="160" rx="8"/>
+        <!-- animated progress square -->
+        <rect class="breath-progress" x="20" y="20" width="160" height="160" rx="8"/>
+        <!-- moving dot -->
+        <circle class="breath-dot" r="8"/>
+      </svg>
+    </div>
+  </div>
+
+  <style>
+    /* Toggle label states via CSS only */
+    #breath-toggle:checked ~ div .breath-start-label { display:none; }
+    #breath-toggle:checked ~ div .breath-stop-label  { display:inline !important; }
+    #breath-toggle:not(:checked) ~ div .breath-toggle-label { background:var(--teal); }
+    #breath-toggle:checked ~ div .breath-toggle-label { background:var(--text-mid); }
+  </style>
+</div>
+
+<!-- ── Exercise 02 — 5-4-3-2-1 Senses ─────────────────────── -->
+<div class="card" style="margin-bottom:24px;" id="senses">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+    <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text-muted);">EXERCISE 02</span>
+  </div>
+  <h2 style="margin-bottom:4px;">5-4-3-2-1 Senses</h2>
+  <p style="margin-bottom:20px;">Ground yourself in the present moment by engaging all five senses. This breaks anxious thought loops in under 2 minutes.</p>
+
+  <div class="senses-grid">
+    {% for count, icon, sense, instruction in [
+      (5,'👁','See','Find 5 things you can see right now — notice their colors and shapes.'),
+      (4,'✋','Touch','Touch 4 things — feel their texture, temperature, and weight.'),
+      (3,'👂','Hear','Listen for 3 distinct sounds — near, far, subtle.'),
+      (2,'👃','Smell','Notice 2 smells — your surroundings, your clothes, the air.'),
+      (1,'👅','Taste','Focus on 1 taste — water, a breath mint, whatever is present.'),
+    ] %}
+    <div class="sense-card">
+      <div class="sense-num">{{ count }}</div>
+      <div class="sense-icon">{{ icon }}</div>
+      <div style="font-weight:600;font-size:0.82rem;margin-bottom:4px;">{{ sense }}</div>
+      <div class="sense-text">{{ instruction }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ── Exercise 03 — Cognitive Reframe ────────────────────── -->
+<div class="card" id="reframe">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+    <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--text-muted);">EXERCISE 03</span>
+  </div>
+  <h2 style="margin-bottom:4px;">Cognitive Reframe</h2>
+  <p style="margin-bottom:20px;">Type a negative thought and get a reframed version. This doesn't deny your feelings — it offers a parallel truth that holds equal weight.</p>
+
+  <form action="{{ url_for('toolkit_reframe') }}" method="POST">
+    <label style="font-weight:500;display:block;margin-bottom:6px;">Your thought:</label>
+    <textarea
+      name="thought"
+      rows="3"
+      placeholder="e.g. I'm a total failure. I can't do anything right."
+      style="width:100%;font-size:0.95rem;"
+    ></textarea>
+    <button type="submit" class="btn btn-primary" style="margin-top:12px;">
+      ◎ Reframe This Thought
+    </button>
+  </form>
+
+  {% if reframe_result %}
+  <div class="reframe-result" style="margin-top:20px;">
+    <div class="reframe-box reframe-original">
+      <div style="font-size:0.7rem;font-family:'DM Mono',monospace;margin-bottom:6px;opacity:0.6;">ORIGINAL</div>
+      "{{ reframe_result.original }}"
+    </div>
+    <div class="reframe-arrow">→</div>
+    <div class="reframe-box reframe-new">
+      <div style="font-size:0.7rem;font-family:'DM Mono',monospace;margin-bottom:6px;opacity:0.6;">REFRAMED</div>
+      {{ reframe_result.reframe }}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
